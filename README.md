@@ -98,3 +98,87 @@ public class SList {
         return sb.toString();
     }
 }
+
+
+
+
+
+
+import java.io.*;
+import java.util.Scanner;
+
+public class Main {
+    private static final String FILE_NAME = "products.dat";
+
+    public static void writeProductItemToFile(ProductItem item) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(FILE_NAME, true))) {
+            oos.writeObject(item);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static SList readProductItemsFromFile() {
+        SList list = new SList();
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(FILE_NAME))) {
+            while (true) {
+                try {
+                    ProductItem item = (ProductItem) ois.readObject();
+                    list.add(item);
+                } catch (EOFException e) {
+                    break;
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        SList shoppingList = readProductItemsFromFile();
+
+        while (true) {
+            System.out.println("\n1. Add Item\n2. Display List\n3. Search Item\n4. Remove Item\n5. Exit");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (choice) {
+                case 1 -> {
+                    System.out.print("Enter product name: ");
+                    String name = scanner.nextLine();
+                    System.out.print("Enter product price: ");
+                    double price = scanner.nextDouble();
+                    ProductItem newItem = new ProductItem(name, price);
+                    shoppingList.add(newItem);
+                    writeProductItemToFile(newItem);
+                }
+                case 2 -> System.out.println("\nShopping List:\n" + shoppingList);
+                case 3 -> {
+                    System.out.print("Enter product name to search: ");
+                    String name = scanner.nextLine();
+                    Node result = shoppingList.search(name);
+                    System.out.println(result != null ? "Found: " + result.item : "Item not found.");
+                }
+                case 4 -> {
+                    System.out.print("Enter product name to remove: ");
+                    String name = scanner.nextLine();
+                    Node node = shoppingList.search(name);
+                    if (node != null) {
+                        shoppingList.remove(node);
+                        System.out.println("Item removed.");
+                    } else {
+                        System.out.println("Item not found.");
+                    }
+                }
+                case 5 -> {
+                    System.out.println("Exiting...");
+                    System.exit(0);
+                }
+                default -> System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+}
